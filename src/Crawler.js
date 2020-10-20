@@ -3,9 +3,7 @@
 const URL = require('url').URL;
 const Promise = require('bluebird');
 const _ = require('lodash/fp');
-const {
-    parseAdsTxt
-} = require('ads.txt');
+const {parseAdsTxt} = require('ads.txt');
 const request = require('superagent');
 require('superagent-proxy')(request);
 
