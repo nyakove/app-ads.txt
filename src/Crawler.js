@@ -1,15 +1,17 @@
 'use strict';
 
-const URL             = require('url').URL;
-const Promise         = require('bluebird');
-const _               = require('lodash/fp');
-const { parseAdsTxt } = require('ads.txt');
-const request         = require('superagent');
+const URL = require('url').URL;
+const Promise = require('bluebird');
+const _ = require('lodash/fp');
+const {
+    parseAdsTxt
+} = require('ads.txt');
+const request = require('superagent');
 require('superagent-proxy')(request);
 
 
 class Crawler {
-    constructor({ proxyUrl } = {}) {
+    constructor({proxyUrl} = {}) {
         this.proxyUrl = proxyUrl;
     }
 
@@ -32,44 +34,43 @@ class Crawler {
 
     // www.rami.com -> www.rami.com
     async _fetchByBaselineUrl(url) {
-        const appAdsUrl = `${url.hostname}/app-ads.txt`;
+        const appAdsUrl = `${url.hostname}/ads.txt`;
         return this._fetchByHttpsOrHttp(appAdsUrl);
     }
 
     // a.b.c.example.com -> b.c.example.com
     async _fetchByRemovingFirstSubDomain(url) {
         // try to fetch root domain
-        const appAdsUrl = `${url.hostname.replace(/^[^.]+\./g, '')}/app-ads.txt`;
+        const appAdsUrl = `${url.hostname.replace(/^[^.]+\./g, '')}/ads.txt`;
         return this._fetchByHttpsOrHttp(appAdsUrl);
     }
 
     // a.b.c.example.com -> example.com
     async _fetchInRootDomainWith1PublicSuffix(url) {
-        const appAdsUrl = `${url.hostname.split('.').slice(-2).join('.')}/app-ads.txt`;
+        const appAdsUrl = `${url.hostname.split('.').slice(-2).join('.')}/ads.txt`;
         return this._fetchByHttpsOrHttp(appAdsUrl);
     }
 
     // a.b.c.example.co.il -> example.co.il
     async _fetchInRootDomainWith2PublicSuffix(url) {
-        const appAdsUrl = `${url.hostname.split('.').slice(-3).join('.')}/app-ads.txt`;
+        const appAdsUrl = `${url.hostname.split('.').slice(-3).join('.')}/ads.txt`;
         return this._fetchByHttpsOrHttp(appAdsUrl);
     }
 
     async _fetchByHttpsOrHttp(url) {
         try {
             return await this._fetchUrl(`https://${url}`);
-        } catch (error) {
-        }
+        } catch (error) {}
 
         return await this._fetchUrl(`http://${url}`);
     }
 
     async _fetchUrl(url) {
-        const response      = await request
+        const response = await request
             .get(url)
             .proxy(this.proxyUrl)
             .timeout({
-                response: 6000,  // Wait 6 seconds for the server to start sending,
+                response: 6000, // Wait 6 seconds for the server to start sending,
                 deadline: 60000, // Allow 1 minute for the file to finish loading.
             });
         const appAdsContent = parseAdsTxt(response.text);
@@ -79,7 +80,7 @@ class Crawler {
     _createResponse(appAdsUrl = '', appAdsFileContent = '') {
         return {
             appAdsUrl: appAdsUrl,
-            data     : appAdsFileContent
+            data: appAdsFileContent
         };
     }
 }
